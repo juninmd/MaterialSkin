@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MaterialSkin.Controls
@@ -11,7 +15,7 @@ namespace MaterialSkin.Controls
         [Browsable(false)]
         public int Depth { get; set; }
         [Browsable(false)]
-        public MaterialSkinManager SkinManager => MaterialSkinManager.Instance;
+        public MaterialSkinManager SkinManager { get { return MaterialSkinManager.Instance; } }
         [Browsable(false)]
         public MouseState MouseState { get; set; }
         [Browsable(false)]
@@ -28,7 +32,7 @@ namespace MaterialSkin.Controls
             OwnerDraw = true;
             ResizeRedraw = true;
             BorderStyle = BorderStyle.None;
-            SetStyle(ControlStyles.DoubleBuffer | ControlStyles.OptimizedDoubleBuffer, true);
+            SetStyle(ControlStyles.DoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
 
             //Fix for hovers, by default it doesn't redraw
             //TODO: should only redraw when the hovered line changed, this to reduce unnecessary redraws
@@ -43,20 +47,22 @@ namespace MaterialSkin.Controls
                 MouseState = MouseState.OUT;
                 MouseLocation = new Point(-1, -1);
                 HoveredItem = null;
-                Invalidate();
+                Invalidate(Bounds);
             };
             MouseDown += delegate { MouseState = MouseState.DOWN; };
             MouseUp += delegate { MouseState = MouseState.HOVER; };
-            MouseMove += delegate (object sender, MouseEventArgs args)
-            {
-                MouseLocation = args.Location;
-                var currentHoveredItem = this.GetItemAt(MouseLocation.X, MouseLocation.Y);
-                if (HoveredItem != currentHoveredItem)
-                {
-                    HoveredItem = currentHoveredItem;
-                    Invalidate();
-                }
-            };
+            MouseMove += MouseMoved;
+            MouseWheel += MouseMoved;
+        }
+
+        private void MouseMoved(object sender, MouseEventArgs args)
+        {
+            MouseLocation = args.Location;
+            var currentHoveredItem = GetItemAt(MouseLocation.X, MouseLocation.Y);
+            if (HoveredItem == currentHoveredItem) return;
+            if (currentHoveredItem != null) Invalidate(currentHoveredItem.Bounds);
+            if (HoveredItem != null) Invalidate(HoveredItem.Bounds);
+            HoveredItem = currentHoveredItem;
         }
 
         protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
@@ -145,14 +151,14 @@ namespace MaterialSkin.Controls
             // This hack tries to apply the Roboto (24) font to all ListViewItems in this ListView
             // It only succeeds if the font is installed on the system.
             // Otherwise, a default sans serif font is used.
-            var roboto24 = new Font(SkinManager.ROBOTO_MEDIUM_12.FontFamily, 24);
-            var roboto24Logfont = new LogFont();
-            roboto24.ToLogFont(roboto24Logfont);
+            Font roboto24 = new Font(SkinManager.ROBOTO_MEDIUM_12.FontFamily, 24);
+            LogFont roboto24logfont = new LogFont();
+            roboto24.ToLogFont(roboto24logfont);
 
             try
             {
                 // Font.FromLogFont is the method used when drawing ListViewItems. I 'test' it in this safer context to avoid unhandled exceptions later.
-                Font = Font.FromLogFont(roboto24Logfont);
+                Font = Font.FromLogFont(roboto24logfont);
             }
             catch (ArgumentException)
             {
