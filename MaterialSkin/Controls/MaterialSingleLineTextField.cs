@@ -1033,9 +1033,12 @@ namespace MaterialSkin.Controls
         protected override void OnCreateControl()
         {
             base.OnCreateControl();
+            _baseTextBox.ForeColor = SkinManager.GetPrimaryTextColor();
+
+            if (Parent.BackColor == Color.Transparent)
+                return;
 
             _baseTextBox.BackColor = Parent.BackColor;
-            _baseTextBox.ForeColor = SkinManager.GetPrimaryTextColor();
         }
 
         private class BaseTextBox : TextBox
