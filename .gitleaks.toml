@@ -1,0 +1,9 @@
+[[allowlist]]
+description = "False positive: generic-api-key in MaterialSkinExample/Properties/Resources.resx"
+rules = ["generic-api-key"]
+paths = ["MaterialSkinExample/Properties/Resources.resx"]
+
+[[allowlist]]
+description = "False positive: generic-api-key in MaterialSkin/Properties/Resources.resx"
+rules = ["generic-api-key"]
+paths = ["MaterialSkin/Properties/Resources.resx"]
